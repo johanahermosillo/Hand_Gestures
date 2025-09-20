@@ -1,7 +1,17 @@
 {
   "manifest version": 3,
-  "name": My First Extension,
+  "name": Untitled,
   "version": 1.0,
-  "description": 
-  
+  "description": "A browser extension that allows users to navigate the web and control videos using hand gestures, leveraging the webcam and Google’s MediaPipe library.",
+  "permissions": ["activeTab", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/filler.png",
+      "48": "images/filler.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
 }
