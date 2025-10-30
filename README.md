@@ -3,3 +3,8 @@ Developed a browser extension that allows users to navigate the web and control 
 
 Link for Mediapipe guide:
 https://ai.google.dev/edge/mediapipe/solutions/customization/gesture_recognizer
+
+
+Selene : Zoom in zoom out function with a closed palm and open palm tracking
+Johana : Picks up tracking. Maybe open up my.utep.edu?
+Caelyn : Air mouse with index and thumb tip 
