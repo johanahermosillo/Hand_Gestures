@@ -1,0 +1,124 @@
+manifest.json
+{
+  "manifest_version": 3,
+  "name": "YouTube Gesture Control",
+  "version": "1.0",
+  "description": "Control YouTube with hand gestures using MediaPipe",
+  "permissions": ["scripting", "activeTab"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["mediapipe.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
+
+
+
+mediapipe.js
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+
+
+
+Gesture detection logic
+const videoElement = document.createElement('video');
+videoElement.style.display = 'none';
+document.body.appendChild(videoElement);
+
+const hands = new Hands({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+});
+
+hands.setOptions({
+  maxNumHands: 1,
+  modelComplexity: 1,
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7
+});
+
+hands.onResults((results) => {
+  const landmarks = results.multiHandLandmarks[0];
+  if (!landmarks) return;
+
+  // Example gesture: open palm = volume up
+  const isPalmOpen = landmarks[4].x < landmarks[3].x && landmarks[8].y < landmarks[6].y;
+  if (isPalmOpen) {
+    window.postMessage({ gesture: "volumeUp" }, "*");
+  }
+});
+
+const camera = new Camera(videoElement, {
+  onFrame: async () => await hands.send({ image: videoElement }),
+  width: 640,
+  height: 480
+});
+camera.start();
+
+
+
+
+content.js (YouTube control logic)
+window.addEventListener("message", (event) => {
+  const gesture = event.data.gesture;
+  const video = document.querySelector("video");
+
+  if (!video) return;
+
+  switch (gesture) {
+    case "volumeUp":
+      video.volume = Math.min(video.volume + 0.1, 1);
+      break;
+    case "volumeDown":
+      video.volume = Math.max(video.volume - 0.1, 0);
+      break;
+    case "scrollUp":
+      window.scrollBy(0, -100);
+      break;
+    case "scrollDown":
+      window.scrollBy(0, 100);
+      break;
+    case "zoomIn":
+      document.body.style.zoom = `${(parseFloat(document.body.style.zoom || 1) + 0.1).toFixed(1)}`;
+      break;
+    case "zoomOut":
+      document.body.style.zoom = `${(parseFloat(document.body.style.zoom || 1) - 0.1).toFixed(1)}`;
+      break;
+  }
+});
+
+
+
+
+popup.html
+<!DOCTYPE html>
+<html>
+  <head><title>Gesture Control</title></head>
+  <body>
+    <h3>Gesture Control Active</h3>
+    <script src="popup.js"></script>
+  </body>
+</html>
+
+
+
+
+popup.js
+chrome.scripting.executeScript({
+  target: { tabId: chrome.tabs.TAB_ID },
+  files: ["mediapipe.js"]
+});
